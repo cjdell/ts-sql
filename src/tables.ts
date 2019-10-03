@@ -11,6 +11,8 @@ export interface Category {
   name: string;
 }
 
+// This object doesn't actually exist.
+// It is purely to assist the type system.
 export interface Schema {
   product: Product;
   category: Category;

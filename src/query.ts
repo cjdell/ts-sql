@@ -1,5 +1,5 @@
 import * as Knex from 'knex';
-import { Omit } from 'ts-essentials';
+import { Dictionary, Omit } from 'ts-essentials';
 import { Schema, SchemaStructure } from './tables';
 
 export interface Paging {
@@ -12,12 +12,8 @@ export interface Result<T> {
   items: ReadonlyArray<T>;
 }
 
-interface Dictionary<T> {
-  [index: string]: T;
-}
-
 export function fromTable<TTableName extends keyof Schema, TTable extends Schema[TTableName]>(knex: Knex, tableName: TTableName) {
-  const q = knex(`${tableName} as root`);
+  const q = knex.table(`${tableName} as root`);
 
   const rec: Record<'root', TTableName> = { 'root': tableName };
 
@@ -25,7 +21,7 @@ export function fromTable<TTableName extends keyof Schema, TTable extends Schema
 }
 
 export async function insertIntoTable<TTableName extends keyof Schema, TTable extends Schema[TTableName]>(knex: Knex, tableName: TTableName, row: Omit<TTable, 'id'>) {
-  const q = knex(tableName);
+  const q = knex.table(tableName);
 
   // NOTE: Different DB's work differently in how they return their auto-increment keys...
   const res = await q.insert(row);
@@ -47,9 +43,7 @@ function where<TTableAlias extends Record<string, keyof Schema>,
 
   return {
     join: (joinTableName, col, joinCol) => {
-      q.join(`${joinTableName} as ${joinCol[0]}`, function () {
-        this.on(columnRef(col), columnRef(joinCol));
-      });
+      q.join(`${joinTableName} as ${joinCol[0]}`, columnRef(col), columnRef(joinCol));
 
       const joinTableAlias = { [joinCol[0]]: joinTableName };
 
